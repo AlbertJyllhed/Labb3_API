@@ -63,8 +63,26 @@ namespace Labb3_API.Controllers
             return Ok(person);
         }
 
-        [HttpPost("{id}/interests", Name = "AddInterestToPerson")]
-        public async Task<IActionResult> AddInterestToPerson(
+        [HttpGet("{id}/interests", Name = "GetPersonInterests")]
+        public async Task<ActionResult<ICollection<GetInterestResponseSimple>>> GetPersonInterests(int id)
+        {
+            var interests = await _ctx.People
+                .AsNoTracking()
+                .Where(p => p.Id == id)
+                .SelectMany(p => p.Interests)
+                .Select(GetInterestResponseSimple.FromEntity)
+                .ToListAsync();
+
+            if (!interests.Any())
+            {
+                return NotFound($"Personen med ID: {id} har inget intresse.");
+            }
+
+            return Ok(interests);
+        }
+
+        [HttpPost("{id}/interests", Name = "AddPersonInterest")]
+        public async Task<IActionResult> AddPersonInterest(
             int id, AddInterestRequest request)
         {
             if (!await _ctx.People.AnyAsync(p => p.Id == id))
@@ -88,6 +106,24 @@ namespace Labb3_API.Controllers
                 Title = interest.Title,
                 Description = interest.Description,
             });
+        }
+
+        [HttpGet("{id}/links", Name = "AddPersonLink")]
+        public async Task<ActionResult<ICollection<GetLinkResponseSimple>>> AddPersonLink(int id)
+        {
+            var links = await _ctx.People
+                .AsNoTracking()
+                .Where(p => p.Id == id)
+                .SelectMany(p => p.Links)
+                .Select(GetLinkResponseSimple.FromEntity)
+                .ToListAsync();
+
+            if (!links.Any())
+            {
+                return NotFound($"Personen med ID: {id} har inga länkar.");
+            }
+
+            return Ok(links);
         }
     }
 }
