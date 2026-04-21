@@ -89,35 +89,5 @@ namespace Labb3_API.Controllers
                 Description = interest.Description,
             });
         }
-
-        [HttpPost("{personId}/interests/{interestId}/links", Name = "AddLink")]
-        public async Task<IActionResult> AddLink(int personId, int interestId, AddLinkRequest request)
-        {
-            if (!await _ctx.People.AnyAsync(p => p.Id == personId))
-            {
-                return NotFound($"Could not find person with ID: {personId}");
-            }
-
-            if (!await _ctx.Interests.AnyAsync(i => i.Id == interestId))
-            {
-                return NotFound($"Could not find interest with ID: {interestId}");
-            }
-
-            var link = new Link
-            {
-                Url = request.Url,
-                PersonId = personId,
-                InterestId = interestId
-            };
-
-            await _ctx.Links.AddAsync(link);
-            await _ctx.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetPersonById), new { id = personId }, new GetLinkResponseSimple
-            {
-                Id = link.Id,
-                Url = link.Url,
-            });
-        }
     }
 }
