@@ -108,8 +108,8 @@ namespace Labb3_API.Controllers
             });
         }
 
-        [HttpGet("{id}/links", Name = "AddPersonLink")]
-        public async Task<ActionResult<ICollection<GetLinkResponseSimple>>> AddPersonLink(int id)
+        [HttpGet("{id}/links", Name = "GetPersonLinks")]
+        public async Task<ActionResult<ICollection<GetLinkResponseSimple>>> GetPersonLinks(int id)
         {
             var links = await _ctx.People
                 .AsNoTracking()

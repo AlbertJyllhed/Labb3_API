@@ -16,31 +16,6 @@ namespace Labb3_API.Controllers
             _ctx = ctx;
         }
 
-        [HttpGet(Name = "GetAllLinks")]
-        public async Task<ActionResult<GetLinkResponse>> GetAllLinks()
-        {
-            return Ok(await _ctx.Links
-                .AsNoTracking()
-                .Select(GetLinkResponse.FromEntity)
-                .ToListAsync());
-        }
-
-        [HttpGet("{id}", Name = "GetLinkById")]
-        public async Task<ActionResult<GetLinkResponse>> GetLinkById(int id)
-        {
-            var link = await _ctx.Links
-                .AsNoTracking()
-                .Select(GetLinkResponse.FromEntity)
-                .FirstOrDefaultAsync(l => l.Id == id);
-
-            if (link is null)
-            {
-                return NotFound($"Länken med ID: {id} hittades inte.");
-            }
-
-            return Ok(link);
-        }
-
         [HttpPost(Name = "AddLink")]
         [ProducesResponseType(typeof(GetLinkResponseSimple), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -62,7 +37,7 @@ namespace Labb3_API.Controllers
             await _ctx.Links.AddAsync(link);
             await _ctx.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetLinkById), new { id = link.Id }, new GetLinkResponseSimple
+            return CreatedAtRoute("AddLink", new { id = link.Id }, new GetLinkResponseSimple
             {
                 Id = link.Id,
                 Url = link.Url,
