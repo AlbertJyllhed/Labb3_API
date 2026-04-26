@@ -4,5 +4,11 @@ Alla endpoints utgår från PersonController.
 Alla DTOs inkluderar en sparad query som kan kallas på var som helst i koden.
 t.ex:
 ```
-Expression<Func<Person, GetPersonResponse>> FromEntity
+public static Expression<Func<Interest, GetInterestResponse>> FromEntity =>
+    i => new GetInterestResponse
+    {
+        Id = i.Id,
+        Title = i.Title,
+        Description = i.Description,
+    };
 ```
