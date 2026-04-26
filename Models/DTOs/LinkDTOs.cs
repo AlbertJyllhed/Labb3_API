@@ -43,5 +43,5 @@ namespace Labb3_API.Models.DTOs
             };
     }
 
-    public record AddLinkRequest(string Url, int personId, int interestId);
+    public record AddLinkRequest(string Url, int interestId);
 }

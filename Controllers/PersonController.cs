@@ -100,7 +100,8 @@ namespace Labb3_API.Controllers
             await _ctx.Interests.AddAsync(interest);
             await _ctx.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetPersonById), new { id }, new GetInterestResponseSimple
+            return CreatedAtAction(nameof(GetPersonById), 
+                new { id = interest.Id }, new GetInterestResponseSimple
             {
                 Id = interest.Id,
                 Title = interest.Title,
@@ -124,6 +125,43 @@ namespace Labb3_API.Controllers
             }
 
             return Ok(links);
+        }
+
+        [HttpPost("{id}/links", Name = "AddPersonLink")]
+        [ProducesResponseType(typeof(GetLinkResponseSimple), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> AddPersonLink(int id, AddLinkRequest request)
+        {
+            if (!await _ctx.People.AnyAsync(p => p.Id == id))
+            {
+                return NotFound($"Could not find person with ID: {id}");
+            }
+
+            bool couldCreate = Uri.TryCreate(request.Url, UriKind.Absolute, out var uriResult);
+            bool urlValid = uriResult != null
+                && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+            if (!couldCreate || !urlValid)
+            {
+                return BadRequest($"Incorrect Url format.");
+            }
+
+            var link = new Link
+            {
+                Url = request.Url,
+                PersonId = id,
+                InterestId = request.interestId
+            };
+
+            await _ctx.Links.AddAsync(link);
+            await _ctx.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetPersonById), 
+                new { id = link.Id }, new GetLinkResponseSimple
+            {
+                Id = link.Id,
+                Url = link.Url,
+            });
         }
     }
 }
