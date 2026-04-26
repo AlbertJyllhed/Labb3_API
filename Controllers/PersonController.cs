@@ -17,42 +17,28 @@ namespace Labb3_API.Controllers
         }
 
         [HttpGet(Name = "GetAllPeople")]
-        public async Task<ActionResult<IEnumerable<GetPersonResponseSimple>>> GetAllPeople()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [EndpointSummary("Get All People")]
+        public async Task<ActionResult<IEnumerable<GetPersonResponse>>> GetAllPeople(
+            bool includeInterests = false, bool includeLinks = false)
         {
             return Ok(await _ctx.People
                 .AsNoTracking()
-                .Select(GetPersonResponseSimple.FromEntity)
+                .Select(GetPersonResponse.FromEntity(includeInterests, includeLinks))
                 .ToListAsync());
         }
 
         [HttpGet("{id}", Name = "GetPersonById")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [EndpointSummary("Get Person by ID")]
         public async Task<ActionResult<GetPersonResponse>> GetPersonById(
             int id, bool includeInterests = false, bool includeLinks = false)
         {
             var person = await _ctx.People
                 .AsNoTracking()
-                .Select(p => new GetPersonResponse
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Phone = p.Phone,
-                    Email = p.Email,
-                    Interests = includeInterests
-                        ? p.Interests.Select(i => new GetInterestResponseSimple
-                        {
-                            Id = i.Id,
-                            Title = i.Title,
-                            Description = i.Description,
-                        }).ToList()
-                        : null,
-                    Links = includeLinks
-                        ? p.Links.Select(l => new GetLinkResponseSimple
-                        {
-                            Id = l.Id,
-                            Url = l.Url,
-                        }).ToList()
-                        : null,
-                })
+                .Select(GetPersonResponse.FromEntity(includeInterests, includeLinks))
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (person is null)
@@ -64,13 +50,16 @@ namespace Labb3_API.Controllers
         }
 
         [HttpGet("{id}/interests", Name = "GetPersonInterests")]
-        public async Task<ActionResult<ICollection<GetInterestResponseSimple>>> GetPersonInterests(int id)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [EndpointSummary("Get Person Interests")]
+        public async Task<ActionResult<ICollection<GetInterestResponse>>> GetPersonInterests(int id)
         {
             var interests = await _ctx.People
                 .AsNoTracking()
                 .Where(p => p.Id == id)
                 .SelectMany(p => p.Interests)
-                .Select(GetInterestResponseSimple.FromEntity)
+                .Select(GetInterestResponse.FromEntity)
                 .ToListAsync();
 
             if (!interests.Any())
@@ -82,6 +71,9 @@ namespace Labb3_API.Controllers
         }
 
         [HttpPost("{id}/interests", Name = "AddPersonInterest")]
+        [ProducesResponseType(typeof(GetInterestResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [EndpointSummary("Add Person Interest")]
         public async Task<IActionResult> AddPersonInterest(
             int id, AddInterestRequest request)
         {
@@ -101,7 +93,7 @@ namespace Labb3_API.Controllers
             await _ctx.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetPersonById), 
-                new { id = interest.Id }, new GetInterestResponseSimple
+                new { id = interest.Id }, new GetInterestResponse
             {
                 Id = interest.Id,
                 Title = interest.Title,
@@ -110,13 +102,16 @@ namespace Labb3_API.Controllers
         }
 
         [HttpGet("{id}/links", Name = "GetPersonLinks")]
-        public async Task<ActionResult<ICollection<GetLinkResponseSimple>>> GetPersonLinks(int id)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [EndpointSummary("Get Person Links")]
+        public async Task<ActionResult<ICollection<GetLinkResponse>>> GetPersonLinks(int id)
         {
             var links = await _ctx.People
                 .AsNoTracking()
                 .Where(p => p.Id == id)
                 .SelectMany(p => p.Links)
-                .Select(GetLinkResponseSimple.FromEntity)
+                .Select(GetLinkResponse.FromEntity)
                 .ToListAsync();
 
             if (!links.Any())
@@ -128,9 +123,10 @@ namespace Labb3_API.Controllers
         }
 
         [HttpPost("{id}/links", Name = "AddPersonLink")]
-        [ProducesResponseType(typeof(GetLinkResponseSimple), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(GetLinkResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [EndpointSummary("Add Person Link")]
         public async Task<IActionResult> AddPersonLink(int id, AddLinkRequest request)
         {
             if (!await _ctx.People.AnyAsync(p => p.Id == id))
@@ -157,7 +153,7 @@ namespace Labb3_API.Controllers
             await _ctx.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetPersonById), 
-                new { id = link.Id }, new GetLinkResponseSimple
+                new { id = link.Id }, new GetLinkResponse
             {
                 Id = link.Id,
                 Url = link.Url,
